@@ -17,6 +17,7 @@ public class DuckDBAppender : IDisposable
     private readonly DuckDBLogicalType[] logicalTypes;
     private readonly DuckDBDataChunk dataChunk;
     private readonly VectorDataWriterBase[] vectorWriters;
+    private DuckDBAppenderRow? currentRow;
 
     internal DuckDBAppender(Native.DuckDBAppender appender, string qualifiedTableName)
     {
@@ -43,6 +44,10 @@ public class DuckDBAppender : IDisposable
     /// </summary>
     internal IReadOnlyList<DuckDBLogicalType> LogicalTypes => logicalTypes;
 
+    /// <summary>
+    /// Creates a new row to append values to. The returned row is only valid until the next
+    /// <see cref="CreateRow"/> call: rows must be filled sequentially, one at a time.
+    /// </summary>
     public IDuckDBAppenderRow CreateRow()
     {
         if (closed)
@@ -60,7 +65,17 @@ public class DuckDBAppender : IDisposable
         }
 
         rowCount++;
-        return new DuckDBAppenderRow(qualifiedTableName, vectorWriters, rowCount - 1, dataChunk, nativeAppender);
+
+        if (currentRow == null)
+        {
+            currentRow = new DuckDBAppenderRow(qualifiedTableName, vectorWriters, rowCount - 1, dataChunk, nativeAppender);
+        }
+        else
+        {
+            currentRow.NewRow(rowCount - 1);
+        }
+
+        return currentRow;
     }
 
     public void Clear()

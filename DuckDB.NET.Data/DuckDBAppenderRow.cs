@@ -7,7 +7,7 @@ public class DuckDBAppenderRow : IDuckDBAppenderRow
     private int columnIndex = 0;
     private readonly string qualifiedTableName;
     private readonly VectorDataWriterBase[] vectorWriters;
-    private readonly ulong rowIndex;
+    private ulong rowIndex;
     private readonly DuckDBDataChunk dataChunk;
     private readonly Native.DuckDBAppender nativeAppender;
 
@@ -19,6 +19,12 @@ public class DuckDBAppenderRow : IDuckDBAppenderRow
         this.rowIndex = rowIndex;
         this.dataChunk = dataChunk;
         this.nativeAppender = nativeAppender;
+    }
+
+    internal void NewRow(ulong rowIndex)
+    {
+        this.rowIndex = rowIndex;
+        columnIndex = 0;
     }
 
     public void EndRow()
